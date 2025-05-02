@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>BlocklyフローチャートAI評価システム（OpenAI版・改）</title>
+  <script src="https://unpkg.com/blockly/blockly.min.js"></script>
+  <style>
+    #blocklyDiv { height: 500px; width: 100%; }
+    #output, #feedback { margin-top: 20px; padding: 10px; border: 1px solid #aaa; }
+  </style>
+</head>
+<body>
+
+<h1 id="taskTitle">課題内容: （課題をここに表示）</h1>
+
+<div id="blocklyDiv"></div>
+
+<button onclick="evaluateCode()">評価する</button>
+
+<div id="output"><strong>生成されたコード:</strong><pre id="codeArea"></pre></div>
+<div id="feedback"><strong>フィードバック:</strong><pre id="feedbackArea"></pre></div>
+
+<script>
+  const TASK_DESCRIPTION = "数値が偶数か奇数かを判定するプログラムを作成してください";
+
+  document.getElementById('taskTitle').innerText = `課題内容: ${TASK_DESCRIPTION}`;
+
+  // Blocklyのセットアップ
+  const workspace = Blockly.inject('blocklyDiv', {
+    toolbox: {
+      "kind": "categoryToolbox",
+      "contents": [
+        {
+          "kind": "category",
+          "name": "制御",
+          "contents": [
+            { "kind": "block", "type": "controls_if" },
+            { "kind": "block", "type": "controls_ifelse" },
+            { "kind": "block", "type": "controls_repeat_ext" },
+            { "kind": "block", "type": "controls_whileUntil" },
+            { "kind": "block", "type": "controls_for" },
+            { "kind": "block", "type": "controls_forEach" }
+          ]
+        },
+        {
+          "kind": "category",
+          "name": "計算・数値",
+          "contents": [
+            { "kind": "block", "type": "math_number" },
+            { "kind": "block", "type": "math_arithmetic" },
+            { "kind": "block", "type": "math_random_int" },
+            { "kind": "block", "type": "math_number_property" },
+            { "kind": "block", "type": "math_change" },
+            { "kind": "block", "type": "math_modulo" }  // 剰余演算ブロックを追加
+          ]
+        },
+        {
+          "kind": "category",
+          "name": "変数",
+          "custom": "VARIABLE"
+        },
+        {
+          "kind": "category",
+          "name": "テキスト",
+          "contents": [
+            { "kind": "block", "type": "text" },
+            { "kind": "block", "type": "text_join" },
+            { "kind": "block", "type": "text_length" },
+            { "kind": "block", "type": "text_isEmpty" },
+            { "kind": "block", "type": "text_print" }
+          ]
+        },
+        {
+          "kind": "category",
+          "name": "リスト",
+          "contents": [
+            { "kind": "block", "type": "lists_create_with" },
+            { "kind": "block", "type": "lists_length" },
+            { "kind": "block", "type": "lists_getIndex" },
+            { "kind": "block", "type": "lists_setIndex" }
+          ]
+        },
+        {
+          "kind": "category",
+          "name": "論理",
+          "contents": [
+            { "kind": "block", "type": "logic_compare" },
+            { "kind": "block", "type": "logic_operation" },
+            { "kind": "block", "type": "logic_negate" },
+            { "kind": "block", "type": "logic_boolean" }
+          ]
+        },
+        {
+          "kind": "category",
+          "name": "関数",
+          "custom": "PROCEDURE"
+        }
+      ]
+    }
+  });
+
+  // 剰余演算のカスタムブロック定義
+  Blockly.defineBlocksWithJsonArray([{
+    "type": "math_modulo",
+    "message0": "%1 ÷ %2",
+    "args0": [
+      {
+        "type": "input_value",
+        "name": "DIVIDEND"
+      },
+      {
+        "type": "input_value",
+        "name": "DIVISOR"
+      }
+    ],
+    "output": "Number",
+    "colour": 230,
+    "tooltip": "割り算の余りを返します",
+    "helpUrl": ""
+  }]);
+
+  Blockly.JavaScript['math_modulo'] = function(block) {
+    var dividend = Blockly.JavaScript.valueToCode(block, 'DIVIDEND', Blockly.JavaScript.ORDER_ATOMIC);
+    var divisor = Blockly.JavaScript.valueToCode(block, 'DIVISOR', Blockly.JavaScript.ORDER_ATOMIC);
+    var code = `${dividend} % ${divisor}`;
+    return [code, Blockly.JavaScript.ORDER_MODULUS];
+  };
+
+  async function evaluateCode() {
+    const code = Blockly.JavaScript.workspaceToCode(workspace);
+    document.getElementById('codeArea').innerText = code;
+
+    const logicPrompt = `
+あなたはプログラミング学習者支援AIです。
+以下の「課題内容」と「コード」について、「ロジック構築力」の評価をしてください。
+
+【課題内容】
+${TASK_DESCRIPTION}
+
+【評価基準】
+- 問題解決のために適切な論理的構造が組まれているか
+- 細かい文法などは気にせず、全体の流れを大切にしてください
+- 流れに飛躍や無理がないか
+- 100点満点でスコアを出し、コメントしてください。
+
+【コード】
+${code}
+
+【出力フォーマット】
+スコア: （0〜100）
+コメント: （テキスト）
+`;
+
+    const logicResult = await callOpenAIAPI(logicPrompt);
+
+    let feedbackText = `【ロジック構築力の評価】\n${logicResult}\n`;
+
+    const scoreMatch = logicResult.match(/スコア[:：]\s*(\d+)/);
+    const score = scoreMatch ? parseInt(scoreMatch[1]) : 0;
+
+    if (score >= 80) {
+      const verificationPrompt = `
+あなたはプログラミング学習者支援AIです。
+以下の「課題内容」と「コード」について、「検証思考力」の評価をしてください。
+
+【課題内容】
+${TASK_DESCRIPTION}
+
+【評価基準】
+- ロジックに抜け漏れがないか
+- 異常系や例外パターンを考慮できているか
+- 改善すべき点があれば指摘してください。
+
+【コード】
+${code}
+
+【出力フォーマット】
+コメント: （テキスト）
+`;
+
+      const verifyResult = await callOpenAIAPI(verificationPrompt);
+      feedbackText += `\n【検証思考力の評価】\n${verifyResult}`;
+    } else {
+      feedbackText += `\n※ロジック構築力を向上させてから検証思考へ進んでください。`;
+    }
+
+    document.getElementById('feedbackArea').innerText = feedbackText;
+  }
+
+  const OPENAI_API_KEY = ""; // ★あなたのOpenAI APIキーに変更してください
+
+  async function callOpenAIAPI(prompt) {
+    const url = "https://api.openai.com/v1/chat/completions";
+
+    const requestBody = {
+      model: "gpt-4o",
+      messages: [
+        { role: "system", content: "あなたは優秀なプログラミング教育AIです。" },
+        { role: "user", content: prompt }
+      ],
+      temperature: 0.2
+    };
+
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${OPENAI_API_KEY}`
+      },
+      body: JSON.stringify(requestBody)
+    });
+
+    if (!response.ok) {
+      throw new Error("OpenAI API呼び出し失敗: " + response.statusText);
+    }
+
+    const data = await response.json();
+    const resultText = data.choices?.[0]?.message?.content || "(応答なし)";
+    return resultText.trim();
+  }
+</script>
+
+</body>
+</html>
