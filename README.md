@@ -40,17 +40,6 @@ cp .env.template .env
 OPENAI_API_KEY=your_actual_openai_api_key_here
 ```
 
-### 2. ファイル配置
-
-以下の構造でファイルを配置してください：
-
-```bash
-mkdir -p frontend backend
-```
-
-- `frontend/`フォルダに`index.html`と`styles.css`を配置
-- `backend/`フォルダに`main.py`, `Dockerfile`, `requirements.txt`, `tasks.json`を配置
-
 ### 3. Docker起動
 
 ```bash
