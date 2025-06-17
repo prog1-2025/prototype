@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<title> ページタイトル </title>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.7/codemirror.min.css" />
+<link rel="stylesheet" href="styles.css" />
+
+</head>
+
+<body>
+<div id="container">
+    <div id="leftContainer">
+        <textarea id="editor">//コードをここに記述</textarea>
+
+        <button id="runButton">コード実行</button>
+
+        <div id="console"></div>
+    </div>
+
+    <div id="rightContainer">
+        <div id="taskContainer">
+            <div id="taskButtons">
+                <label for="taskSelect">課題選択:</label>
+                <select id="taskSelect">
+                    <option value="">課題を選択してください</option>
+                </select>
+                <input type="number" id="taskNumber" placeholder="課題番号 (1-111)" min="1" max="111">
+                <button id="loadTaskButton">課題読み込み</button>
+            </div>
+
+            <div id="taskContent">課題を選択してください</div>
+        </div>
+
+        <div id="levelContainer">
+            <div id="levelButtons">
+                <button data-task="0">🤖 AI Help - コード評価</button>
+            </div>
+            <div id="levelContent">
+            <div style="text-align:center; color:#666; padding:20px;">
+                <p>📝 <strong>使い方</strong></p>
+                <p>1. 課題を選択</p>
+                <p>2. コードを記述</p>
+                <p>3. 上のボタンでAI評価を取得</p>
+                <br>
+                <p style="font-size:12px;">AIがコードの品質、正確性、改善点を分析して詳細なフィードバックを提供します</p>
+                <hr style="margin: 15px 0;">
+                <div style="font-size:12px;">
+                    <strong>🔧 デバッグ機能</strong><br>
+                    <button onclick="manualTestAPI()" style="margin:5px; padding:3px 8px; font-size:11px;">API手動テスト</button>
+                    <button onclick="showTasksData()" style="margin:5px; padding:3px 8px; font-size:11px;">データ確認</button>
+                    <button onclick="testOpenAI()" style="margin:5px; padding:3px 8px; font-size:11px;">AI接続テスト</button>
+                </div>
+            </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.7/codemirror.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.7/mode/clike/clike.min.js"></script>
+<script>
+    const editor = CodeMirror.fromTextArea(document.getElementById('editor'), {
+        mode: "text/x-csrc",
+        lineNumbers: true,
+        indentUnit: 4,
+        tabSize: 4,
+    });
+    const console = document.getElementById('console');
+    const runButton = document.getElementById('runButton');
+    const levelContent = document.getElementById('levelContent');
+    
+    // 安全なログ関数
+    function safeLog(message, data = '') {
+        try {
+            if (typeof console !== 'undefined' && console.log) {
+                console.log(message, data);
+            }
+        } catch (e) {
+            // console が利用できない場合は何もしない
+        }
+    }
+    
+    // デバッグメッセージを画面に表示する関数
+    function showDebugMessage(message) {
+        const debugDiv = document.getElementById('debugMessage') || (() => {
+            const div = document.createElement('div');
+            div.id = 'debugMessage';
+            div.style.cssText = 'position:fixed;top:10px;right:10px;background:#333;color:#fff;padding:10px;font-size:12px;max-width:300px;z-index:9999;border-radius:4px;';
+            document.body.appendChild(div);
+            return div;
+        })();
+        debugDiv.innerHTML = message + '<br>' + (debugDiv.innerHTML || '');
+        setTimeout(() => debugDiv.style.display = 'none', 10000); // 10秒後に非表示
+    }
+    
+    let currentTaskId = null;
+    let currentTaskDescription = '';
+    
+    // デバッグ用関数（グローバルスコープ）
+    window.manualTestAPI = function() {
+        safeLog('=== API手動テスト開始 ===');
+        showDebugMessage('🔧 API手動テスト開始');
+        
+        fetch('/api/tasks')
+            .then(response => {
+                safeLog('Response status:', response.status);
+                safeLog('Response ok:', response.ok);
+                showDebugMessage(`API応答: ${response.status} ${response.ok ? 'OK' : 'NG'}`);
+                return response.json();
+            })
+            .then(data => {
+                safeLog('APIレスポンス:', data);
+                const taskCount = data.tasks ? data.tasks.length : 0;
+                showDebugMessage(`✅ API正常: ${taskCount}個の課題`);
+                alert(`API応答正常: ${taskCount}個の課題`);
+            })
+            .catch(error => {
+                safeLog('APIエラー:', error);
+                showDebugMessage(`❌ APIエラー: ${error.message}`);
+                alert('APIエラー: ' + error.message);
+            });
+    };
+    
+    window.showTasksData = function() {
+        safeLog('=== tasksData確認 ===');
+        
+        const currentTasksData = tasksData || window.tasksData;
+        safeLog('tasksData:', currentTasksData);
+        
+        let message = '';
+        if (currentTasksData && currentTasksData.tasks) {
+            message = `tasksData確認: ${currentTasksData.tasks.length}個の課題が読み込み済み`;
+            message += `\n最初の5つの課題: ${currentTasksData.tasks.slice(0, 5).map(t => t.title).join(', ')}`;
+            showDebugMessage(`✅ ${message}`);
+        } else if (currentTasksData) {
+            message = 'tasksDataは存在しますが、tasksプロパティがありません';
+            message += `\nオブジェクトの中身: ${Object.keys(currentTasksData).join(', ')}`;
+            showDebugMessage(`⚠️ ${message}`);
+        } else {
+            message = 'tasksDataが読み込まれていません';
+            showDebugMessage(`❌ ${message}`);
+        }
+        
+        alert(message);
+    };
+    
+    window.testOpenAI = function() {
+        safeLog('=== OpenAI接続テスト開始 ===');
+        showDebugMessage('🤖 OpenAI接続テスト開始');
+        
+        fetch('/api/test-openai')
+            .then(response => response.json())
+            .then(data => {
+                safeLog('OpenAI テストレスポンス:', data);
+                if (data.status === 'success') {
+                    showDebugMessage('✅ OpenAI接続成功');
+                    alert(`OpenAI API接続成功!\n${data.message}`);
+                } else {
+                    showDebugMessage(`❌ OpenAI接続失敗: ${data.message}`);
+                    alert(`OpenAI API接続失敗:\n${data.message}\nエラータイプ: ${data.error_type || 'Unknown'}`);
+                }
+            })
+            .catch(error => {
+                safeLog('OpenAI テストエラー:', error);
+                showDebugMessage(`❌ OpenAIテストエラー: ${error.message}`);
+                alert('OpenAI接続テストエラー: ' + error.message);
+            });
+    };
+    
+    // loadTasks関数もグローバルに
+    window.loadTasks = async function() {
+        try {
+            safeLog('課題データの読み込みを開始...');
+            showDebugMessage('📡 課題データ読み込み開始');
+            
+            const response = await fetch('/api/tasks');
+            
+            safeLog('Response status:', response.status);
+            
+            if (!response.ok) {
+                const errorText = await response.text();
+                safeLog('API Error:', errorText);
+                showDebugMessage('❌ API Error: ' + response.status);
+                throw new Error(`HTTP ${response.status}: ${errorText}`);
+            }
+            
+            const data = await response.json();
+            safeLog('受信したデータ:', data);
+            safeLog('課題数:', data.tasks ? data.tasks.length : 'tasksプロパティが存在しません');
+            
+            if (!data.tasks || !Array.isArray(data.tasks)) {
+                showDebugMessage('❌ データ形式エラー');
+                throw new Error('APIレスポンスが期待される形式ではありません');
+            }
+            
+            // グローバル変数に確実に代入
+            window.tasksData = data;
+            tasksData = data;
+            
+            safeLog('tasksData設定完了:', tasksData);
+            showDebugMessage('📋 tasksData設定: ' + data.tasks.length + '件');
+            
+            populateTaskSelect();
+            safeLog('課題データの読み込み完了');
+            showDebugMessage('✅ 課題データ読み込み完了: ' + data.tasks.length + '件');
+        } catch (error) {
+            safeLog('課題データの読み込みエラー:', error.message);
+            showDebugMessage('❌ 課題データ読み込みエラー: ' + error.message);
+            
+            document.getElementById('taskContent').innerHTML = `
+                <div style="color:red; padding: 10px; border: 1px solid red; border-radius: 4px;">
+                    <h3>❌ 課題データの読み込みに失敗しました</h3>
+                    <p><strong>エラー:</strong> ${error.message}</p>
+                    <details style="margin-top: 10px;">
+                        <summary>詳細情報</summary>
+                        <pre style="background: #f0f0f0; padding: 8px; margin-top: 5px; white-space: pre-wrap;">${error.stack || 'スタックトレースなし'}</pre>
+                    </details>
+                    <button onclick="loadTasks()" style="margin-top: 10px; padding: 5px 10px;">🔄 再読み込み</button>
+                </div>
+            `;
+        }
+    };
+    
+    // コード実行ボタン（Wandbox APIのみ）
+    runButton.addEventListener('click', async () => {
+        const code = editor.getValue();
+        console.textContent = '実行中\n';
+
+        try {
+            const compileResponse = await fetch('https://wandbox.org/api/compile.json', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    code: code,
+                    compiler: 'gcc-head',
+                    options: '-std=c11',
+                    stdin: ''
+                })
+            });
+            
+            const data = await compileResponse.json();
+            
+            if(data.compiler_error) {
+                console.textContent = 'コンパイルエラー\n' + data.compiler_error;
+            } else if(data.program_error) {
+                console.textContent = '実行時エラー\n' + data.program_error;
+            } else {
+                console.textContent = '実行結果\n' + data.program_output;
+            }
+            
+            showDebugMessage('✅ コード実行完了');
+        } catch (err) {
+            console.textContent = 'ネットワークエラー\n';
+            showDebugMessage('❌ ネットワークエラー');
+        }
+    });
+    
+    // フィードバックを表示する関数
+    function displayFeedback(feedback) {
+        const levelImages = {
+            1: '🔴', 2: '🟠', 3: '🟡', 4: '🟢', 5: '🌟'
+        };
+        
+        const correctIcon = feedback.is_correct ? '✅' : '❌';
+        
+        levelContent.innerHTML = `
+            <div style="padding: 10px;">
+                <div style="text-align: center; margin-bottom: 15px;">
+                    <h3>評価結果 ${levelImages[feedback.level]} レベル${feedback.level}</h3>
+                    <div style="font-size: 18px;">${correctIcon} 課題達成: ${feedback.is_correct ? '成功' : '未完了'}</div>
+                    <div>総合スコア: ${feedback.overall_score}/5</div>
+                </div>
+                
+                <div style="margin-bottom: 10px;">
+                    <h4>📝 詳細フィードバック</h4>
+                    <p style="background: #f0f0f0; padding: 8px; border-radius: 4px; margin: 0;">${feedback.detailed_feedback}</p>
+                </div>
+                
+                ${feedback.strengths.length > 0 ? `
+                <div style="margin-bottom: 10px;">
+                    <h4>👍 良い点</h4>
+                    <ul style="margin: 0; padding-left: 20px;">
+                        ${feedback.strengths.map(s => `<li>${s}</li>`).join('')}
+                    </ul>
+                </div>
+                ` : ''}
+                
+                ${feedback.improvements.length > 0 ? `
+                <div style="margin-bottom: 10px;">
+                    <h4>🔧 改善点</h4>
+                    <ul style="margin: 0; padding-left: 20px;">
+                        ${feedback.improvements.map(i => `<li>${i}</li>`).join('')}
+                    </ul>
+                </div>
+                ` : ''}
+                
+                ${feedback.hints.length > 0 ? `
+                <div style="margin-bottom: 10px;">
+                    <h4>💡 ヒント</h4>
+                    <ul style="margin: 0; padding-left: 20px;">
+                        ${feedback.hints.map(h => `<li>${h}</li>`).join('')}
+                    </ul>
+                </div>
+                ` : ''}
+                
+                <div>
+                    <h4>🎯 次のステップ</h4>
+                    <p style="background: #e8f5e8; padding: 8px; border-radius: 4px; margin: 0;">${feedback.next_steps}</p>
+                </div>
+            </div>
+        `;
+    }
+
+    // 課題データを格納する変数
+    let tasksData = {};
+    
+    // 課題選択プルダウンにオプションを追加
+    function populateTaskSelect() {
+        safeLog('populateTaskSelect開始');
+        showDebugMessage('📋 プルダウン構築開始');
+        
+        const taskSelect = document.getElementById('taskSelect');
+        
+        if (!taskSelect) {
+            safeLog('taskSelectエレメントが見つかりません');
+            showDebugMessage('❌ taskSelectエレメントなし');
+            return;
+        }
+        
+        // より厳密な存在チェック
+        const currentTasksData = tasksData || window.tasksData;
+        
+        if (!currentTasksData) {
+            safeLog('tasksDataが存在しません');
+            showDebugMessage('❌ tasksDataが存在しません');
+            taskSelect.innerHTML = '<option value="">課題データを読み込み中...</option>';
+            return;
+        }
+        
+        if (!currentTasksData.tasks || !Array.isArray(currentTasksData.tasks)) {
+            safeLog('tasksData.tasksが配列ではありません:', currentTasksData);
+            showDebugMessage('❌ tasksData.tasksが無効');
+            taskSelect.innerHTML = '<option value="">課題データの形式が無効</option>';
+            return;
+        }
+        
+        taskSelect.innerHTML = '<option value="">課題を選択してください</option>';
+        
+        let addedCount = 0;
+        currentTasksData.tasks.forEach((task, index) => {
+            if (task && task.id && task.title) {
+                safeLog(`課題${index + 1}を追加:`, task);
+                const option = document.createElement('option');
+                option.value = task.id;
+                option.textContent = task.title;
+                taskSelect.appendChild(option);
+                addedCount++;
+            } else {
+                safeLog('無効な課題データ:', task);
+            }
+        });
+        
+        safeLog(`合計${addedCount}個の課題をプルダウンに追加しました`);
+        showDebugMessage(`📋 ${addedCount}個の課題をプルダウンに追加`);
+        
+        // 初期メッセージを更新
+        document.getElementById('taskContent').innerHTML = `
+            <div style="color: green; padding: 10px;">
+                ✅ ${addedCount}個の課題が正常に読み込まれました<br>
+                プルダウンメニューから課題を選択してください
+            </div>
+        `;
+    }
+    
+    // 課題を表示する
+    function displayTask(taskId) {
+        safeLog('displayTask呼び出し:', taskId);
+        showDebugMessage('📝 課題' + taskId + '表示開始');
+        
+        // より厳密な存在チェック
+        const currentTasksData = tasksData || window.tasksData;
+        
+        if (!currentTasksData) {
+            safeLog('tasksDataが存在しません');
+            showDebugMessage('⚠️ tasksDataが存在しません - 読み込み開始');
+            document.getElementById('taskContent').innerHTML = `
+                <div style="color:orange; padding: 10px;">
+                    ⚠️ 課題データがまだ読み込まれていません<br>
+                    <button onclick="loadTasks()" style="margin-top: 5px;">課題データを読み込む</button>
+                </div>
+            `;
+            // 自動で読み込みを試行
+            window.loadTasks();
+            return;
+        }
+        
+        if (!currentTasksData.tasks || !Array.isArray(currentTasksData.tasks)) {
+            safeLog('tasksData.tasksが配列ではありません:', currentTasksData);
+            showDebugMessage('⚠️ tasksData.tasksが無効');
+            document.getElementById('taskContent').innerHTML = `
+                <div style="color:orange; padding: 10px;">
+                    ⚠️ 課題データの形式が無効です<br>
+                    <button onclick="loadTasks()" style="margin-top: 5px;">再読み込み</button>
+                </div>
+            `;
+            return;
+        }
+        
+        const task = currentTasksData.tasks.find(t => t.id == taskId);
+        const taskContent = document.getElementById('taskContent');
+        
+        if (task) {
+            currentTaskId = task.id;
+            currentTaskDescription = task.description;
+            
+            taskContent.innerHTML = `
+                <h3>${task.title}</h3>
+                <p>${task.description}</p>
+            `;
+            safeLog('課題表示完了:', task.title);
+            showDebugMessage(`✅ 課題${taskId}表示完了`);
+        } else {
+            taskContent.innerHTML = `
+                <div style="color:red; padding: 10px;">
+                    ❌ 課題${taskId}が見つかりません<br>
+                    利用可能な課題: 1〜${currentTasksData.tasks.length}<br>
+                    <small>利用可能な課題ID: ${currentTasksData.tasks.map(t => t.id).slice(0, 10).join(', ')}...</small>
+                </div>
+            `;
+            currentTaskId = null;
+            currentTaskDescription = '';
+            safeLog('課題が見つかりません:', taskId);
+            showDebugMessage(`❌ 課題${taskId}が見つかりません`);
+        }
+    }
+    
+    // イベントリスナーを設定
+    document.addEventListener('DOMContentLoaded', () => {
+        window.loadTasks();
+        
+        // プルダウンでの課題選択
+        document.getElementById('taskSelect').addEventListener('change', (e) => {
+            if (e.target.value) {
+                displayTask(e.target.value);
+                document.getElementById('taskNumber').value = e.target.value;
+            }
+        });
+        
+        // 課題番号入力での課題選択
+        document.getElementById('taskNumber').addEventListener('input', (e) => {
+            const taskId = e.target.value;
+            if (taskId >= 1 && taskId <= 111) {
+                document.getElementById('taskSelect').value = taskId;
+                if (tasksData.tasks && tasksData.tasks.find(t => t.id == taskId)) {
+                    displayTask(taskId);
+                }
+            }
+        });
+        
+        // 課題読み込みボタン
+        document.getElementById('loadTaskButton').addEventListener('click', () => {
+            const taskId = document.getElementById('taskNumber').value;
+            if (taskId >= 1 && taskId <= 111) {
+                displayTask(taskId);
+                document.getElementById('taskSelect').value = taskId;
+            } else {
+                alert('1から111の間の課題番号を入力してください');
+            }
+        });
+        
+        // AI Helpボタン
+        const aiHelpButton = document.querySelector('#levelButtons button[data-task="0"]');
+        if (aiHelpButton) {
+            aiHelpButton.addEventListener('click', async () => {
+                const code = editor.getValue();
+                
+                if (!currentTaskId || !currentTaskDescription) {
+                    levelContent.innerHTML = '<div style="color:orange;">まず課題を選択してください</div>';
+                    showDebugMessage('⚠️ 課題未選択');
+                    return;
+                }
+                
+                if (!code.trim() || code.trim() === '//コードをここに記述') {
+                    levelContent.innerHTML = '<div style="color:orange;">コードを記述してからAI Helpをクリックしてください</div>';
+                    showDebugMessage('⚠️ コード未記述');
+                    return;
+                }
+                
+                levelContent.innerHTML = '<div style="text-align:center;">🤖 AIがコードを評価中...</div>';
+                showDebugMessage('🤖 AI評価開始');
+                
+                try {
+                    const feedbackResponse = await fetch('/api/evaluate-code', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({
+                            code: code,
+                            task_id: currentTaskId,
+                            task_description: currentTaskDescription
+                        })
+                    });
+                    
+                    const feedbackData = await feedbackResponse.json();
+                    
+                    if (feedbackData.success) {
+                        displayFeedback(feedbackData.feedback);
+                        showDebugMessage('✅ AI評価完了');
+                    } else {
+                        levelContent.innerHTML = '<div style="color:red;">フィードバック取得エラー: ' + (feedbackData.error || 'Unknown error') + '</div>';
+                        showDebugMessage('❌ AI評価エラー');
+                    }
+                } catch (error) {
+                    levelContent.innerHTML = '<div style="color:red;">フィードバック取得エラー: ' + error.message + '</div>';
+                    showDebugMessage('❌ AI評価エラー: ' + error.message);
+                }
+            });
+        }
+    });
+</script>
+</body>
+
+</html>

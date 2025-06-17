@@ -1,0 +1,160 @@
+#container {
+    display: flex;
+    height: 100vh;
+    width: 100vw;
+}
+
+#leftContainer, #rightContainer {
+    flex: 1;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.CodeMirror {
+    flex: 1 1 0%;
+    min-height: 0;
+    height: auto;
+    font-size: 16px;
+    margin: 8px;
+    border: 1.2px solid #828282;
+    border-radius: 2.5px;
+    background: #fff;
+    box-sizing: border-box;
+}
+
+#editor {
+    height: 100%;
+}
+
+#runButton {
+    margin: 8px;
+    padding: 8px 16px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+#runButton:hover {
+    background-color: #45a049;
+}
+
+#console {
+    height: 100px;
+    border: 1.2px solid #828282;
+    border-radius: 2.5px;
+    margin: 8px;
+    padding: 8px;
+    overflow-y: auto;
+    background-color: #f8f8f8;
+    font-family: monospace;
+    white-space: pre-wrap;
+}
+
+#taskContainer {
+    height: 200px;
+    border: 1.2px solid #828282;
+    border-radius: 2.5px;
+    margin: 8px;
+    padding: 8px;
+    overflow-y: auto;
+}
+
+#taskButtons {
+    margin-bottom: 10px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+}
+
+#taskButtons label {
+    font-weight: bold;
+    margin-right: 5px;
+}
+
+#taskSelect {
+    padding: 5px;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+    flex: 1;
+    min-width: 150px;
+}
+
+#taskNumber {
+    padding: 5px;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+    width: 150px;
+}
+
+#loadTaskButton {
+    padding: 5px 10px;
+    background-color: #008CBA;
+    color: white;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+    font-size: 12px;
+}
+
+#loadTaskButton:hover {
+    background-color: #007B9A;
+}
+
+#taskContent {
+    border-top: 1px solid #ddd;
+    padding-top: 10px;
+    margin-top: 10px;
+}
+
+#taskContent h3 {
+    margin: 0 0 10px 0;
+    color: #333;
+}
+
+#taskContent p {
+    margin: 0;
+    line-height: 1.5;
+}
+
+#levelContainer {
+    height: 400px;
+    border: 1.2px solid #828282;
+    border-radius: 2.5px;
+    margin: 8px;
+    padding: 8px;
+    overflow-y: auto;
+}
+
+#levelButtons {
+    margin-bottom: 10px;
+}
+
+#levelButtons button {
+    padding: 8px 16px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 14px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    transition: all 0.3s ease;
+}
+
+#levelButtons button:hover {
+    background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+
+#levelButtons button:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
