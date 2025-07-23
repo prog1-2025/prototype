@@ -1,3 +1,5 @@
+# --- ライブラリのインポート ---
+# FastAPI本体、CORSミドルウェア、モデル定義、OpenAIクライアント、各種ユーティリティを読み込む
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -6,16 +8,19 @@ import openai
 import os
 import json
 from openai import OpenAI
-from pydantic import BaseModel
 import logging
 
-# ログ設定
+# --- ログ設定 ---
+# INFOレベル以上をコンソールに出力
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+# --- FastAPIアプリケーションの初期化 ---
+# タイトルを指定してAPIサーバを立ち上げる
 app = FastAPI(title="Code Learning Feedback API")
 
-# CORS設定
+# --- CORS設定 ---
+# 全オリジンからのアクセスを許可（開発時用）
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -24,11 +29,15 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# OpenAI クライアントをグローバル変数として宣言（遅延初期化）
+# --- OpenAIクライアントの遅延初期化用変数 ---
+# 環境変数からキーを取得し、初回アクセス時にクライアントを生成
 client = None
 
 def get_openai_client():
-    """OpenAIクライアントを取得（遅延初期化）"""
+    """
+    OpenAIクライアントを取得（初回は環境変数からAPIキーを読み込み、例外処理付きで初期化）
+    2回目以降は既存インスタンスを返却
+    """
     global client
     if client is None:
         api_key = os.getenv("OPENAI_API_KEY")
@@ -41,51 +50,54 @@ def get_openai_client():
             raise HTTPException(status_code=500, detail="Failed to initialize OpenAI client")
     return client
 
-# リクエストモデル
+# --- Pydanticモデル定義 ---
+# リクエストとレスポンスのデータ構造を型安全に定義
+
 class CodeEvaluationRequest(BaseModel):
+    # クライアントから受け取るコード評価リクエスト
     code: str
     task_id: int
     task_description: str
 
-# Structured Output用のレスポンスモデル
 class CodeFeedback(BaseModel):
-    overall_score: int  # 1-5の評価
-    level: int  # 1-5のレベル
-    is_correct: bool  # 正解かどうか
-    strengths: List[str]  # 良い点
-    improvements: List[str]  # 改善点
-    hints: List[str]  # ヒント
-    detailed_feedback: str  # 詳細なフィードバック
-    next_steps: str  # 次のステップの提案
+    # AIが返すフィードバックの詳細構造
+    overall_score: int
+    level: int
+    is_correct: bool
+    strengths: List[str]
+    improvements: List[str]
+    hints: List[str]
+    detailed_feedback: str
+    next_steps: str
 
 class EvaluationResponse(BaseModel):
+    # 評価APIの最終レスポンス構造
     success: bool
     feedback: CodeFeedback
     error: Optional[str] = None
 
+# --- ルートエンドポイント ---
+# サービス稼働確認用のシンプルな応答
 @app.get("/")
 async def root():
     return {"message": "Code Learning Feedback API"}
 
+# --- OpenAI接続テスト用エンドポイント ---
+# "Hello"を送ってAPIが動作するか確かめる
 @app.get("/api/test-openai")
 async def test_openai():
-    """OpenAI API接続テスト用エンドポイント"""
     try:
         openai_client = get_openai_client()
-        
-        # シンプルなAPI呼び出しテスト
         response = openai_client.chat.completions.create(
             model="gpt-3.5-turbo",
             messages=[{"role": "user", "content": "Hello"}],
             max_tokens=10
         )
-        
         return {
             "status": "success",
             "message": "OpenAI API connection successful",
             "response_preview": response.choices[0].message.content[:50]
         }
-        
     except Exception as e:
         logger.error(f"OpenAI API test failed: {str(e)}")
         return {
@@ -94,17 +106,15 @@ async def test_openai():
             "error_type": type(e).__name__
         }
 
+# --- ヘルスチェックエンドポイント ---
+# ファイルの存在や環境変数、クライアント初期化状況を返却
 @app.get("/api/health")
 async def health_check():
-    """ヘルスチェック用エンドポイント"""
     import os
     current_dir = os.path.dirname(os.path.abspath(__file__))
     tasks_file_path = os.path.join(current_dir, "tasks.json")
-    
-    # OpenAI API Keyの確認
     openai_api_key = os.getenv("OPENAI_API_KEY")
     openai_status = "configured" if openai_api_key else "not_configured"
-    
     return {
         "status": "ok",
         "current_directory": current_dir,
@@ -115,6 +125,8 @@ async def health_check():
         "openai_client_initialized": client is not None
     }
 
+# --- コード評価エンドポイント ---
+# 学習者のCコードを受け取り、OpenAIで構造化フィードバックを生成して返却
 @app.post("/api/evaluate-code", response_model=EvaluationResponse)
 async def evaluate_code(request: CodeEvaluationRequest):
     try:
@@ -252,18 +264,15 @@ async def evaluate_code(request: CodeEvaluationRequest):
             error=str(e)
         )
 
+# --- 課題一覧取得エンドポイント ---
+# backend/tasks.json から全課題を読み込んで返す
 @app.get("/api/tasks")
 async def get_tasks():
-    """課題一覧を返す"""
     try:
-        import os
-        # 現在のディレクトリからtasks.jsonを読み込み
         current_dir = os.path.dirname(os.path.abspath(__file__))
         tasks_file_path = os.path.join(current_dir, "tasks.json")
-        
         with open(tasks_file_path, "r", encoding="utf-8") as f:
-            tasks_data = json.load(f)
-        return tasks_data
+            return json.load(f)
     except FileNotFoundError:
         logger.error(f"Tasks file not found at {tasks_file_path}")
         raise HTTPException(status_code=404, detail="Tasks file not found")
@@ -271,21 +280,18 @@ async def get_tasks():
         logger.error(f"Error loading tasks: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
+# --- 特定課題取得エンドポイント ---
+# 指定IDの課題を tasks.json から検索して返却
 @app.get("/api/tasks/{task_id}")
 async def get_task(task_id: int):
-    """特定の課題を返す"""
     try:
-        import os
         current_dir = os.path.dirname(os.path.abspath(__file__))
         tasks_file_path = os.path.join(current_dir, "tasks.json")
-        
         with open(tasks_file_path, "r", encoding="utf-8") as f:
             tasks_data = json.load(f)
-        
         task = next((t for t in tasks_data["tasks"] if t["id"] == task_id), None)
         if not task:
             raise HTTPException(status_code=404, detail="Task not found")
-        
         return task
     except FileNotFoundError:
         logger.error(f"Tasks file not found at {tasks_file_path}")
@@ -294,6 +300,8 @@ async def get_task(task_id: int):
         logger.error(f"Error loading task {task_id}: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
+# --- アプリ起動処理 ---
+# 単体実行時は uvicorn でサーバを起動
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
