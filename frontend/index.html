@@ -2,144 +2,10 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8" />
-<title>段階的学習支援システム</title>
+<title> ページタイトル </title>
 
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.7/codemirror.min.css" />
 <link rel="stylesheet" href="styles.css" />
-
-<style>
-/* 段階的学習用の追加スタイル */
-.phase-progress {
-    background: linear-gradient(90deg, #e3f2fd 0%, #bbdefb 100%);
-    padding: 15px;
-    border-radius: 8px;
-    margin-bottom: 15px;
-    border: 2px solid #2196F3;
-}
-
-.phase-indicator {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 10px;
-}
-
-.phase-step {
-    flex: 1;
-    text-align: center;
-    padding: 8px;
-    margin: 0 2px;
-    border-radius: 6px;
-    font-size: 12px;
-    font-weight: bold;
-    transition: all 0.3s ease;
-}
-
-.phase-step.active {
-    background-color: #4CAF50;
-    color: white;
-    transform: scale(1.05);
-}
-
-.phase-step.completed {
-    background-color: #2196F3;
-    color: white;
-}
-
-.phase-step.pending {
-    background-color: #f0f0f0;
-    color: #666;
-}
-
-.stage-detail {
-    background: white;
-    padding: 10px;
-    border-radius: 6px;
-    margin-top: 10px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
-
-.completion-bar {
-    width: 100%;
-    height: 20px;
-    background-color: #f0f0f0;
-    border-radius: 10px;
-    overflow: hidden;
-    margin: 10px 0;
-}
-
-.completion-fill {
-    height: 100%;
-    background: linear-gradient(90deg, #4CAF50, #8BC34A);
-    transition: width 0.5s ease;
-}
-
-.analysis-section {
-    margin: 15px 0;
-    padding: 12px;
-    border-radius: 6px;
-    border-left: 4px solid #2196F3;
-}
-
-.analysis-section h4 {
-    margin: 0 0 8px 0;
-    color: #1976D2;
-}
-
-.analysis-section.strengths {
-    background-color: #e8f5e8;
-    border-left-color: #4CAF50;
-}
-
-.analysis-section.improvements {
-    background-color: #fff3e0;
-    border-left-color: #FF9800;
-}
-
-.analysis-section.next-steps {
-    background-color: #e3f2fd;
-    border-left-color: #2196F3;
-}
-
-.analysis-section.encouragement {
-    background-color: #f3e5f5;
-    border-left-color: #9C27B0;
-}
-
-.progressive-learning-button {
-    background: linear-gradient(45deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    border: none;
-    padding: 12px 20px;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 16px;
-    font-weight: bold;
-    width: 100%;
-    margin-bottom: 10px;
-    transition: transform 0.2s ease;
-}
-
-.progressive-learning-button:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-}
-
-.loading-spinner {
-    display: inline-block;
-    width: 20px;
-    height: 20px;
-    border: 3px solid #f3f3f3;
-    border-top: 3px solid #3498db;
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-}
-</style>
 
 </head>
 
@@ -154,64 +20,37 @@
     </div>
 
     <div id="rightContainer">
-        <!-- 元の課題選択部分をそのまま保持 -->
         <div id="taskContainer">
             <div id="taskButtons">
                 <label for="taskSelect">課題選択:</label>
                 <select id="taskSelect">
                     <option value="">課題を選択してください</option>
                 </select>
+                <input type="number" id="taskNumber" placeholder="課題番号 (1-111)" min="1" max="111">
+                <button id="loadTaskButton">課題読み込み</button>
             </div>
 
             <div id="taskContent">課題を選択してください</div>
         </div>
 
-        <!-- 段階的学習進捗表示（新機能） -->
-        <div id="phase-progress-container" class="phase-progress" style="display: none;">
-            <div class="phase-indicator">
-                <div class="phase-step pending" data-phase="phase1">
-                    <div>①</div>
-                    <div>課題理解</div>
-                </div>
-                <div class="phase-step pending" data-phase="phase2to4">
-                    <div>②-④</div>
-                    <div>構想・実装</div>
-                </div>
-                <div class="phase-step pending" data-phase="phase5">
-                    <div>⑤</div>
-                    <div>検証</div>
-                </div>
-            </div>
-            
-            <div id="stage-detail" class="stage-detail" style="display: none;">
-                <div id="current-stage-info"></div>
-                <div class="completion-bar">
-                    <div id="completion-fill" class="completion-fill" style="width: 0%"></div>
-                </div>
-                <div id="completion-text">0% 完成</div>
-            </div>
-        </div>
-
-        <!-- levelContainer は元のまま、ボタンのみ変更 -->
         <div id="levelContainer">
             <div id="levelButtons">
-                <button class="progressive-learning-button" data-task="0">🤖 AI段階的学習支援 - コード分析</button>
+                <button data-task="0">🤖 AI Help - コード評価</button>
             </div>
             <div id="levelContent">
             <div style="text-align:center; color:#666; padding:20px;">
-                <p>📝 <strong>段階的学習支援システム</strong></p>
+                <p>📝 <strong>使い方</strong></p>
                 <p>1. 課題を選択</p>
                 <p>2. コードを記述</p>
-                <p>3. AI段階的学習支援ボタンで分析を取得</p>
+                <p>3. 上のボタンでAI評価を取得</p>
                 <br>
-                <p style="font-size:12px;">AIが学習段階を判定し、適切なガイダンスを提供します</p>
+                <p style="font-size:12px;">AIがコードの品質、正確性、改善点を分析して詳細なフィードバックを提供します</p>
                 <hr style="margin: 15px 0;">
                 <div style="font-size:12px;">
                     <strong>🔧 デバッグ機能</strong><br>
                     <button onclick="manualTestAPI()" style="margin:5px; padding:3px 8px; font-size:11px;">API手動テスト</button>
                     <button onclick="showTasksData()" style="margin:5px; padding:3px 8px; font-size:11px;">データ確認</button>
                     <button onclick="testOpenAI()" style="margin:5px; padding:3px 8px; font-size:11px;">AI接続テスト</button>
-                    <button onclick="testProgressiveLearningAPI()" style="margin:5px; padding:3px 8px; font-size:11px;">段階的学習APIテスト</button>
                 </div>
             </div>
             </div>
@@ -222,7 +61,6 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.7/codemirror.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.7/mode/clike/clike.min.js"></script>
 <script>
-    // === 元のコード設定をそのまま保持 ===
     const editor = CodeMirror.fromTextArea(document.getElementById('editor'), {
         mode: "text/x-csrc",
         lineNumbers: true,
@@ -233,16 +71,7 @@
     const runButton = document.getElementById('runButton');
     const levelContent = document.getElementById('levelContent');
     
-    // 元の変数をそのまま保持
-    let currentTaskId = null;
-    let currentTaskDescription = '';
-    let tasksData = {};
-    
-    // 段階的学習用の新しい変数
-    let currentSessionId = null;
-    let currentLearningPhase = null;
-    
-    // === 元のデバッグ機能をそのまま保持 ===
+    // 安全なログ関数
     function safeLog(message, data = '') {
         try {
             if (typeof console !== 'undefined' && console.log) {
@@ -253,6 +82,7 @@
         }
     }
     
+    // デバッグメッセージを画面に表示する関数
     function showDebugMessage(message) {
         const debugDiv = document.getElementById('debugMessage') || (() => {
             const div = document.createElement('div');
@@ -262,10 +92,13 @@
             return div;
         })();
         debugDiv.innerHTML = message + '<br>' + (debugDiv.innerHTML || '');
-        setTimeout(() => debugDiv.style.display = 'none', 10000);
+        setTimeout(() => debugDiv.style.display = 'none', 10000); // 10秒後に非表示
     }
     
-    // === 元のデバッグ関数をそのまま保持 ===
+    let currentTaskId = null;
+    let currentTaskDescription = '';
+    
+    // デバッグ用関数（グローバルスコープ）
     window.manualTestAPI = function() {
         safeLog('=== API手動テスト開始 ===');
         showDebugMessage('🔧 API手動テスト開始');
@@ -336,48 +169,61 @@
             });
     };
     
-    // 新しいデバッグ機能のみ追加
-    window.testProgressiveLearningAPI = function() {
-        safeLog('=== 段階的学習APIテスト開始 ===');
-        showDebugMessage('🧪 段階的学習APIテスト開始');
-        
-        const testCode = `// テスト用のコード
-#include <stdio.h>
-int main() {
-    int n;
-    scanf("%d", &n);
-    // ここに処理を書く
-    return 0;
-}`;
-        
-        fetch('/api/progressive-learning-analysis', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({
-                code: testCode,
-                task_description: "整数nを入力して、1からnまでの約数の総和を求めるプログラムを作成してください。",
-                session_id: "test_session"
-            })
-        })
-        .then(response => response.json())
-        .then(data => {
-            safeLog('段階的学習API テストレスポンス:', data);
-            if (data.success) {
-                showDebugMessage(`✅ 段階的学習API成功: ${data.detected_phase}`);
-                alert(`段階的学習API接続成功!\nフェーズ: ${data.detected_phase}\n分析結果: ${JSON.stringify(data.analysis, null, 2).substring(0, 200)}...`);
-            } else {
-                showDebugMessage(`❌ 段階的学習API失敗: ${data.message}`);
-                alert(`段階的学習API失敗:\n${data.message}\nエラー: ${data.error || 'Unknown'}`);
+    // loadTasks関数もグローバルに
+    window.loadTasks = async function() {
+        try {
+            safeLog('課題データの読み込みを開始...');
+            showDebugMessage('📡 課題データ読み込み開始');
+            
+            const response = await fetch('/api/tasks');
+            
+            safeLog('Response status:', response.status);
+            
+            if (!response.ok) {
+                const errorText = await response.text();
+                safeLog('API Error:', errorText);
+                showDebugMessage('❌ API Error: ' + response.status);
+                throw new Error(`HTTP ${response.status}: ${errorText}`);
             }
-        })
-        .catch(error => {
-            safeLog('段階的学習API テストエラー:', error);
-            showDebugMessage(`❌ 段階的学習APIテストエラー: ${error.message}`);
-            alert('段階的学習API接続テストエラー: ' + error.message);
-        });
+            
+            const data = await response.json();
+            safeLog('受信したデータ:', data);
+            safeLog('課題数:', data.tasks ? data.tasks.length : 'tasksプロパティが存在しません');
+            
+            if (!data.tasks || !Array.isArray(data.tasks)) {
+                showDebugMessage('❌ データ形式エラー');
+                throw new Error('APIレスポンスが期待される形式ではありません');
+            }
+            
+            // グローバル変数に確実に代入
+            window.tasksData = data;
+            tasksData = data;
+            
+            safeLog('tasksData設定完了:', tasksData);
+            showDebugMessage('📋 tasksData設定: ' + data.tasks.length + '件');
+            
+            populateTaskSelect();
+            safeLog('課題データの読み込み完了');
+            showDebugMessage('✅ 課題データ読み込み完了: ' + data.tasks.length + '件');
+        } catch (error) {
+            safeLog('課題データの読み込みエラー:', error.message);
+            showDebugMessage('❌ 課題データ読み込みエラー: ' + error.message);
+            
+            document.getElementById('taskContent').innerHTML = `
+                <div style="color:red; padding: 10px; border: 1px solid red; border-radius: 4px;">
+                    <h3>❌ 課題データの読み込みに失敗しました</h3>
+                    <p><strong>エラー:</strong> ${error.message}</p>
+                    <details style="margin-top: 10px;">
+                        <summary>詳細情報</summary>
+                        <pre style="background: #f0f0f0; padding: 8px; margin-top: 5px; white-space: pre-wrap;">${error.stack || 'スタックトレースなし'}</pre>
+                    </details>
+                    <button onclick="loadTasks()" style="margin-top: 10px; padding: 5px 10px;">🔄 再読み込み</button>
+                </div>
+            `;
+        }
     };
     
-    // === 元のコード実行機能をそのまま保持 ===
+    // コード実行ボタン（Wandbox APIのみ）
     runButton.addEventListener('click', async () => {
         const code = editor.getValue();
         console.textContent = '実行中\n';
@@ -411,59 +257,66 @@ int main() {
         }
     });
     
-    // === 元の課題関連機能をそのまま保持 ===
-    window.loadTasks = async function() {
-        try {
-            safeLog('課題データの読み込みを開始...');
-            showDebugMessage('📡 課題データ読み込み開始');
-            
-            const response = await fetch('/api/tasks');
-            
-            safeLog('Response status:', response.status);
-            
-            if (!response.ok) {
-                const errorText = await response.text();
-                safeLog('API Error:', errorText);
-                showDebugMessage('❌ API Error: ' + response.status);
-                throw new Error(`HTTP ${response.status}: ${errorText}`);
-            }
-            
-            const data = await response.json();
-            safeLog('受信したデータ:', data);
-            safeLog('課題数:', data.tasks ? data.tasks.length : 'tasksプロパティが存在しません');
-            
-            if (!data.tasks || !Array.isArray(data.tasks)) {
-                showDebugMessage('❌ データ形式エラー');
-                throw new Error('APIレスポンスが期待される形式ではありません');
-            }
-            
-            window.tasksData = data;
-            tasksData = data;
-            
-            safeLog('tasksData設定完了:', tasksData);
-            showDebugMessage('📋 tasksData設定: ' + data.tasks.length + '件');
-            
-            populateTaskSelect();
-            safeLog('課題データの読み込み完了');
-            showDebugMessage('✅ 課題データ読み込み完了: ' + data.tasks.length + '件');
-        } catch (error) {
-            safeLog('課題データの読み込みエラー:', error.message);
-            showDebugMessage('❌ 課題データ読み込みエラー: ' + error.message);
-            
-            document.getElementById('taskContent').innerHTML = `
-                <div style="color:red; padding: 10px; border: 1px solid red; border-radius: 4px;">
-                    <h3>❌ 課題データの読み込みに失敗しました</h3>
-                    <p><strong>エラー:</strong> ${error.message}</p>
-                    <details style="margin-top: 10px;">
-                        <summary>詳細情報</summary>
-                        <pre style="background: #f0f0f0; padding: 8px; margin-top: 5px; white-space: pre-wrap;">${error.stack || 'スタックトレースなし'}</pre>
-                    </details>
-                    <button onclick="loadTasks()" style="margin-top: 10px; padding: 5px 10px;">🔄 再読み込み</button>
+    // フィードバックを表示する関数
+    function displayFeedback(feedback) {
+        const levelImages = {
+            1: '🔴', 2: '🟠', 3: '🟡', 4: '🟢', 5: '🌟'
+        };
+        
+        const correctIcon = feedback.is_correct ? '✅' : '❌';
+        
+        levelContent.innerHTML = `
+            <div style="padding: 10px;">
+                <div style="text-align: center; margin-bottom: 15px;">
+                    <h3>評価結果 ${levelImages[feedback.level]} レベル${feedback.level}</h3>
+                    <div style="font-size: 18px;">${correctIcon} 課題達成: ${feedback.is_correct ? '成功' : '未完了'}</div>
+                    <div>総合スコア: ${feedback.overall_score}/5</div>
                 </div>
-            `;
-        }
-    };
+                
+                <div style="margin-bottom: 10px;">
+                    <h4>📝 詳細フィードバック</h4>
+                    <p style="background: #f0f0f0; padding: 8px; border-radius: 4px; margin: 0;">${feedback.detailed_feedback}</p>
+                </div>
+                
+                ${feedback.strengths.length > 0 ? `
+                <div style="margin-bottom: 10px;">
+                    <h4>👍 良い点</h4>
+                    <ul style="margin: 0; padding-left: 20px;">
+                        ${feedback.strengths.map(s => `<li>${s}</li>`).join('')}
+                    </ul>
+                </div>
+                ` : ''}
+                
+                ${feedback.improvements.length > 0 ? `
+                <div style="margin-bottom: 10px;">
+                    <h4>🔧 改善点</h4>
+                    <ul style="margin: 0; padding-left: 20px;">
+                        ${feedback.improvements.map(i => `<li>${i}</li>`).join('')}
+                    </ul>
+                </div>
+                ` : ''}
+                
+                ${feedback.hints.length > 0 ? `
+                <div style="margin-bottom: 10px;">
+                    <h4>💡 ヒント</h4>
+                    <ul style="margin: 0; padding-left: 20px;">
+                        ${feedback.hints.map(h => `<li>${h}</li>`).join('')}
+                    </ul>
+                </div>
+                ` : ''}
+                
+                <div>
+                    <h4>🎯 次のステップ</h4>
+                    <p style="background: #e8f5e8; padding: 8px; border-radius: 4px; margin: 0;">${feedback.next_steps}</p>
+                </div>
+            </div>
+        `;
+    }
+
+    // 課題データを格納する変数
+    let tasksData = {};
     
+    // 課題選択プルダウンにオプションを追加
     function populateTaskSelect() {
         safeLog('populateTaskSelect開始');
         showDebugMessage('📋 プルダウン構築開始');
@@ -476,6 +329,7 @@ int main() {
             return;
         }
         
+        // より厳密な存在チェック
         const currentTasksData = tasksData || window.tasksData;
         
         if (!currentTasksData) {
@@ -511,6 +365,7 @@ int main() {
         safeLog(`合計${addedCount}個の課題をプルダウンに追加しました`);
         showDebugMessage(`📋 ${addedCount}個の課題をプルダウンに追加`);
         
+        // 初期メッセージを更新
         document.getElementById('taskContent').innerHTML = `
             <div style="color: green; padding: 10px;">
                 ✅ ${addedCount}個の課題が正常に読み込まれました<br>
@@ -519,10 +374,12 @@ int main() {
         `;
     }
     
+    // 課題を表示する
     function displayTask(taskId) {
         safeLog('displayTask呼び出し:', taskId);
         showDebugMessage('📝 課題' + taskId + '表示開始');
         
+        // より厳密な存在チェック
         const currentTasksData = tasksData || window.tasksData;
         
         if (!currentTasksData) {
@@ -534,6 +391,7 @@ int main() {
                     <button onclick="loadTasks()" style="margin-top: 5px;">課題データを読み込む</button>
                 </div>
             `;
+            // 自動で読み込みを試行
             window.loadTasks();
             return;
         }
@@ -578,267 +436,11 @@ int main() {
         }
     }
     
-    // === 段階的学習支援の新機能のみ追加 ===
-    
-    // 進捗表示更新
-    function updatePhaseProgress(phase, analysis) {
-        const progressContainer = document.getElementById('phase-progress-container');
-        const stageDetail = document.getElementById('stage-detail');
-        const currentStageInfo = document.getElementById('current-stage-info');
-        const completionFill = document.getElementById('completion-fill');
-        const completionText = document.getElementById('completion-text');
-        
-        progressContainer.style.display = 'block';
-        stageDetail.style.display = 'block';
-        
-        // フェーズステップの更新
-        document.querySelectorAll('.phase-step').forEach(step => {
-            step.className = 'phase-step pending';
-        });
-        
-        let activePhaseElement;
-        if (phase === 'phase1_understanding') {
-            activePhaseElement = document.querySelector('[data-phase="phase1"]');
-            currentStageInfo.innerHTML = `
-                <strong>① 課題の理解</strong><br>
-                <small>${analysis.phase_name || '課題の理解'}</small>
-            `;
-        } else if (phase === 'phase2to4_conceptual_implementation') {
-            activePhaseElement = document.querySelector('[data-phase="phase2to4"]');
-            const stageNames = {
-                'stage2_framework': '② 処理の大枠',
-                'stage3_details': '③ 処理の詳細化',
-                'stage4_specifics': '④ 条件・演算の具体化'
-            };
-            currentStageInfo.innerHTML = `
-                <strong>②-④ 構想・実装</strong><br>
-                <small>現在: ${stageNames[analysis.current_stage] || analysis.current_stage_name}</small>
-            `;
-            document.querySelector('[data-phase="phase1"]').className = 'phase-step completed';
-        } else if (phase === 'phase5_verification') {
-            activePhaseElement = document.querySelector('[data-phase="phase5"]');
-            currentStageInfo.innerHTML = `
-                <strong>⑤ コードの整合性判定</strong><br>
-                <small>${analysis.phase_name || '検証'}</small>
-            `;
-            document.querySelector('[data-phase="phase1"]').className = 'phase-step completed';
-            document.querySelector('[data-phase="phase2to4"]').className = 'phase-step completed';
-        }
-        
-        if (activePhaseElement) {
-            activePhaseElement.className = 'phase-step active';
-        }
-        
-        const completionPercentage = analysis.completion_percentage || analysis.stage_completion_percentage || 0;
-        completionFill.style.width = `${completionPercentage}%`;
-        completionText.textContent = `${completionPercentage}% 完成`;
-    }
-    
-    // 段階的学習分析結果の表示
-    function displayProgressiveLearningAnalysis(result) {
-        const analysis = result.analysis;
-        const phase = result.detected_phase;
-        
-        currentLearningPhase = phase;
-        updatePhaseProgress(phase, analysis);
-        
-        let content = `<div style="padding: 10px;">
-            <div style="text-align: center; margin-bottom: 15px;">
-                <h3>${analysis.phase_name}</h3>`;
-        
-        if (phase === 'phase1_understanding') {
-            content += displayPhase1Analysis(analysis);
-        } else if (phase === 'phase2to4_conceptual_implementation') {
-            content += displayPhase2to4Analysis(analysis);
-        } else if (phase === 'phase5_verification') {
-            content += displayPhase5Analysis(analysis);
-        }
-        
-        content += `</div>`;
-        levelContent.innerHTML = content;
-    }
-    
-    // ① 課題理解フェーズの表示
-    function displayPhase1Analysis(analysis) {
-        const understandingLevels = {
-            'insufficient': '❌ 不十分',
-            'partial': '⚠️ 部分的',
-            'good': '✅ 良好',
-            'excellent': '🌟 優秀'
-        };
-        
-        return `
-            <div>理解度: ${understandingLevels[analysis.understanding_level] || analysis.understanding_level}</div>
-            <div>完成度: ${analysis.completion_percentage}%</div>
-        </div>
-        
-        ${analysis.current_strengths && analysis.current_strengths.length > 0 ? `
-        <div class="analysis-section strengths">
-            <h4>👍 現在の理解できている点</h4>
-            <ul style="margin: 0; padding-left: 20px;">
-                ${analysis.current_strengths.map(s => `<li>${s}</li>`).join('')}
-            </ul>
-        </div>
-        ` : ''}
-        
-        ${analysis.missing_understanding && analysis.missing_understanding.length > 0 ? `
-        <div class="analysis-section improvements">
-            <h4>📋 明確にすべき点</h4>
-            <ul style="margin: 0; padding-left: 20px;">
-                ${analysis.missing_understanding.map(m => `<li>${m}</li>`).join('')}
-            </ul>
-        </div>
-        ` : ''}
-        
-        ${analysis.clarification_questions && analysis.clarification_questions.length > 0 ? `
-        <div class="analysis-section next-steps">
-            <h4>❓ 理解を深める質問</h4>
-            <ul style="margin: 0; padding-left: 20px;">
-                ${analysis.clarification_questions.map(q => `<li>${q}</li>`).join('')}
-            </ul>
-        </div>
-        ` : ''}
-        
-        <div class="analysis-section next-steps">
-            <h4>🎯 次のステップ</h4>
-            <p style="margin: 0;">${analysis.next_step_guidance}</p>
-        </div>
-        
-        <div class="analysis-section encouragement">
-            <h4>🌟 励ましのメッセージ</h4>
-            <p style="margin: 0;"><strong>${analysis.encouragement}</strong></p>
-        </div>
-        `;
-    }
-    
-    // ②-④ 構想・実装フェーズの表示
-    function displayPhase2to4Analysis(analysis) {
-        const stageNames = {
-            'stage2_framework': '② 処理の大枠の決定',
-            'stage3_details': '③ 処理の詳細化',
-            'stage4_specifics': '④ 条件・演算の具体化'
-        };
-        
-        return `
-            <div>現在段階: ${stageNames[analysis.current_stage] || analysis.current_stage_name}</div>
-            <div>段階完成度: ${analysis.stage_completion_percentage}%</div>
-            <div>全体進捗: ${analysis.overall_implementation_progress}%</div>
-        </div>
-        
-        <div style="background: #f8f9fa; padding: 10px; border-radius: 4px; margin: 10px 0;">
-            <h4>📊 段階別分析</h4>
-            <div style="font-size: 12px;">
-                <div>② 大枠: ${analysis.stage2_analysis.framework_completion}% 
-                    ${analysis.stage2_analysis.has_top_level_comments ? '✅コメント' : '❌コメント'}
-                    ${analysis.stage2_analysis.has_basic_structure ? '✅構造' : '❌構造'}
-                </div>
-                <div>③ 詳細: ${analysis.stage3_analysis.details_completion}% 
-                    ${analysis.stage3_analysis.has_variable_design ? '✅変数' : '❌変数'}
-                    ${analysis.stage3_analysis.has_control_structures ? '✅制御' : '❌制御'}
-                </div>
-                <div>④ 具体化: ${analysis.stage4_analysis.specifics_completion}% 
-                    ${analysis.stage4_analysis.has_specific_conditions ? '✅条件' : '❌条件'}
-                    ${analysis.stage4_analysis.has_concrete_operations ? '✅演算' : '❌演算'}
-                </div>
-            </div>
-        </div>
-        
-        ${analysis.implemented_elements && analysis.implemented_elements.length > 0 ? `
-        <div class="analysis-section strengths">
-            <h4>✅ 実装済み要素</h4>
-            <ul style="margin: 0; padding-left: 20px;">
-                ${analysis.implemented_elements.map(e => `<li>${e}</li>`).join('')}
-            </ul>
-        </div>
-        ` : ''}
-        
-        ${analysis.missing_elements && analysis.missing_elements.length > 0 ? `
-        <div class="analysis-section improvements">
-            <h4>🔧 未実装要素</h4>
-            <ul style="margin: 0; padding-left: 20px;">
-                ${analysis.missing_elements.map(e => `<li>${e}</li>`).join('')}
-            </ul>
-        </div>
-        ` : ''}
-        
-        <div class="analysis-section next-steps">
-            <h4>🎯 現在の焦点</h4>
-            <p style="margin: 0 0 10px 0;"><strong>${analysis.current_focus}</strong></p>
-            
-            <h4>📝 次にやること</h4>
-            <ul style="margin: 0; padding-left: 20px;">
-                ${analysis.immediate_next_steps.map(step => `<li>${step}</li>`).join('')}
-            </ul>
-            
-            ${analysis.why_these_steps ? `
-            <div style="background: #e8f5e8; padding: 8px; border-radius: 4px; margin-top: 10px;">
-                <strong>💡 なぜこのステップが必要？</strong><br>
-                ${analysis.why_these_steps}
-            </div>
-            ` : ''}
-        </div>
-        
-        <div class="analysis-section encouragement">
-            <h4>🌟 励ましのメッセージ</h4>
-            <p style="margin: 0;"><strong>${analysis.encouragement}</strong></p>
-        </div>
-        `;
-    }
-    
-    // ⑤ 検証フェーズの表示
-    function displayPhase5Analysis(analysis) {
-        return `
-            <div>検証完成度: ${analysis.completion_percentage}%</div>
-        </div>
-        
-        <div style="background: #f8f9fa; padding: 10px; border-radius: 4px; margin: 10px 0;">
-            <h4>🔍 検証結果</h4>
-            <div style="font-size: 12px;">
-                <div>${analysis.is_syntactically_correct ? '✅' : '❌'} 構文の正確性</div>
-                <div>${analysis.is_logically_correct ? '✅' : '❌'} 論理の正確性</div>
-                <div>${analysis.passes_basic_tests ? '✅' : '❌'} 基本テスト通過</div>
-                <div>${analysis.handles_edge_cases ? '✅' : '❌'} 境界条件処理</div>
-            </div>
-        </div>
-        
-        ${analysis.potential_issues && analysis.potential_issues.length > 0 ? `
-        <div class="analysis-section improvements">
-            <h4>⚠️ 潜在的な問題</h4>
-            <ul style="margin: 0; padding-left: 20px;">
-                ${analysis.potential_issues.map(issue => `<li>${issue}</li>`).join('')}
-            </ul>
-        </div>
-        ` : ''}
-        
-        ${analysis.debugging_steps && analysis.debugging_steps.length > 0 ? `
-        <div class="analysis-section next-steps">
-            <h4>🔧 デバッグ手順</h4>
-            <ul style="margin: 0; padding-left: 20px;">
-                ${analysis.debugging_steps.map(step => `<li>${step}</li>`).join('')}
-            </ul>
-        </div>
-        ` : ''}
-        
-        <div class="analysis-section next-steps">
-            <h4>📝 全体評価</h4>
-            <p style="margin: 0;">${analysis.overall_assessment}</p>
-        </div>
-        
-        <div class="analysis-section encouragement">
-            <h4>🌟 励ましのメッセージ</h4>
-            <p style="margin: 0;"><strong>${analysis.encouragement}</strong></p>
-        </div>
-        `;
-    }
-    
-    // === イベントリスナー設定（元のものをそのまま保持 + 新機能追加） ===
+    // イベントリスナーを設定
     document.addEventListener('DOMContentLoaded', () => {
         window.loadTasks();
         
-        // セッションID生成（新機能）
-        currentSessionId = `session_${Date.now()}`;
-        
-        // === 元のイベントリスナーをそのまま保持 ===
+        // プルダウンでの課題選択
         document.getElementById('taskSelect').addEventListener('change', (e) => {
             if (e.target.value) {
                 displayTask(e.target.value);
@@ -846,10 +448,32 @@ int main() {
             }
         });
         
-        // === 新しいAI段階的学習支援ボタンのイベントリスナー ===
-        const progressiveLearningButton = document.querySelector('.progressive-learning-button[data-task="0"]');
-        if (progressiveLearningButton) {
-            progressiveLearningButton.addEventListener('click', async () => {
+        // 課題番号入力での課題選択
+        document.getElementById('taskNumber').addEventListener('input', (e) => {
+            const taskId = e.target.value;
+            if (taskId >= 1 && taskId <= 111) {
+                document.getElementById('taskSelect').value = taskId;
+                if (tasksData.tasks && tasksData.tasks.find(t => t.id == taskId)) {
+                    displayTask(taskId);
+                }
+            }
+        });
+        
+        // 課題読み込みボタン
+        document.getElementById('loadTaskButton').addEventListener('click', () => {
+            const taskId = document.getElementById('taskNumber').value;
+            if (taskId >= 1 && taskId <= 111) {
+                displayTask(taskId);
+                document.getElementById('taskSelect').value = taskId;
+            } else {
+                alert('1から111の間の課題番号を入力してください');
+            }
+        });
+        
+        // AI Helpボタン
+        const aiHelpButton = document.querySelector('#levelButtons button[data-task="0"]');
+        if (aiHelpButton) {
+            aiHelpButton.addEventListener('click', async () => {
                 const code = editor.getValue();
                 
                 if (!currentTaskId || !currentTaskDescription) {
@@ -859,47 +483,42 @@ int main() {
                 }
                 
                 if (!code.trim() || code.trim() === '//コードをここに記述') {
-                    levelContent.innerHTML = '<div style="color:orange;">コードを記述してからAI段階的学習支援をクリックしてください</div>';
+                    levelContent.innerHTML = '<div style="color:orange;">コードを記述してからAI Helpをクリックしてください</div>';
                     showDebugMessage('⚠️ コード未記述');
                     return;
                 }
                 
-                levelContent.innerHTML = `
-                    <div style="text-align:center; padding: 20px;">
-                        <div class="loading-spinner"></div>
-                        <p>🤖 AIが段階的分析中...</p>
-                        <small>コードの学習段階を判定し、適切なガイダンスを準備しています</small>
-                    </div>
-                `;
-                showDebugMessage('🤖 段階的学習分析開始');
+                levelContent.innerHTML = '<div style="text-align:center;">🤖 AIがコードを評価中...</div>';
+                showDebugMessage('🤖 AI評価開始');
                 
                 try {
-                    const analysisResponse = await fetch('/api/progressive-learning-analysis', {
+                    const feedbackResponse = await fetch('/api/evaluate-code', {
                         method: 'POST',
                         headers: {'Content-Type': 'application/json'},
                         body: JSON.stringify({
                             code: code,
-                            task_description: currentTaskDescription,
-                            session_id: currentSessionId
+                            task_id: currentTaskId,
+                            task_description: currentTaskDescription
                         })
                     });
                     
-                    const result = await analysisResponse.json();
+                    const feedbackData = await feedbackResponse.json();
                     
-                    if (result.success) {
-                        displayProgressiveLearningAnalysis(result);
-                        showDebugMessage(`✅ 段階的学習分析完了: ${result.detected_phase}`);
+                    if (feedbackData.success) {
+                        displayFeedback(feedbackData.feedback);
+                        showDebugMessage('✅ AI評価完了');
                     } else {
-                        levelContent.innerHTML = '<div style="color:red;">段階的学習分析エラー: ' + (result.error || 'Unknown error') + '</div>';
-                        showDebugMessage('❌ 段階的学習分析エラー');
+                        levelContent.innerHTML = '<div style="color:red;">フィードバック取得エラー: ' + (feedbackData.error || 'Unknown error') + '</div>';
+                        showDebugMessage('❌ AI評価エラー');
                     }
                 } catch (error) {
-                    levelContent.innerHTML = '<div style="color:red;">段階的学習分析エラー: ' + error.message + '</div>';
-                    showDebugMessage('❌ 段階的学習分析エラー: ' + error.message);
+                    levelContent.innerHTML = '<div style="color:red;">フィードバック取得エラー: ' + error.message + '</div>';
+                    showDebugMessage('❌ AI評価エラー: ' + error.message);
                 }
             });
         }
     });
 </script>
 </body>
+
 </html>
